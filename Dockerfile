@@ -19,17 +19,18 @@ USER root
 # 'RUN' executes code during the build
 # Install dependencies via apt-get or yum if using a centos or fedora base
 RUN apt-get update && apt-get install -y --no-install-recommends \ 
-    ca-certificates \
-    && apt-get autoclean && rm -rf /var/lib/apt/lists/*
+    ca-certificates && \
+    apt-get autoclean && rm -rf /var/lib/apt/lists/* && \
+    mkdir /data && mkdir /data/eggnog-mapper-data
 
 ENV PATH="/opt/conda/bin:$PATH" \
-    LC_ALL=C
+    LC_ALL=C \
+    EGGNOG_DATA_DIR=/data/eggnog-mapper-data
 
 
 RUN micromamba install --name base -c conda-forge -c bioconda eggnog-mapper=${EGGNOGMAPPER_VER} && \
     download_eggnog_data.py -y && \
-    micromamba clean -a -f -y && \
-    mkdir /data
+    micromamba clean -a -f -y
 
 CMD ["emapper.py", "--help"]
 
@@ -39,7 +40,7 @@ FROM app AS test
 
 WORKDIR /test
 
-RUN emapper.py --help && \
-    emapper.py --version
+RUN emapper.py -h && \
+    emapper.py -v
 
 RUN micromamba list
